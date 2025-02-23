@@ -1,0 +1,48 @@
+datethe day, month, and year the data collection took place; written as month/day/year
+
+treenumberthe unique number assigned to each plant, correlating to the physical tag; written as a number between [1-80]
+
+treatmentthe associated predators assigned to the specific tree number; sdb-scale destroyer beetles, lw- lacewings, both- combination of sdb and lw; untreated-no associated predators. Each treatment had a netted (e.g., lw_netted)and unnetted (lw) treatment. Clean plants were plants without CMBS infestations and were treated with RTSA horticultural oil
+
+healthratinga visual rating from 1-5 of plant health [(1)- Healthy, <10% twig dieback or foliar discoloration; (2)- slightly unhealth, 10-25% twig dieback or foliar discoloration; (3)- Moderately unhealthy, 26-50% twig dieback or foliar discoloration; (4)- Severely unhealthy, >50% twig dieback or foliar discoloration; (5)- dead]
+
+sootymoldratinga rating between 1-4 [(1)- Little to no sooty mold on plant (<10% of total plant area), (2)- Low sooty mold levels (10-25% of plant area), (3)- moderate sooty mold levels (25-50% of plant area), (4)- Hogh sooty mold levels (50-75%), (5)- Extreme sooty mold conditions (>75%)]
+
+spad#the associated spad sample taken. Five measurements were made on three random leaves (spad1, spad2, spad3, etc.) and average for average chlorophyll content in foliage.
+
+spad_avgthe average of the five spad measurements taken
+
+aphid#the number of aphids found on the associated leaf. Three random leaves were sampled and the total number of aphids were counted
+
+aphid_avgthe average number of aphids found on the three leaves sampled
+lengththe cumulative linear length of crapemyrtle material per plant. Expressed in centimeters
+
+final_osthe number of crapemyrtle bark scale ovisacs counted at the end of the study; settled scales having the characteristic enlarged, raise, and white covering were included in these counts
+
+final_femalethe number of crapemyrtle bark scale females counted at the end of the study; settled scales having the characteristic large, gray and/or beginning stages of white covering were included in these counts
+
+final_malethe number of crapemyrtle bark scale males counted at the end of the study; settled scales with the indicative oval like, white cocoon were included in these counts
+
+final_nymphthe number of crapemyrtle bark scale settled crawlers counted at the end of the study; these were settled crawlers that were too early in development to be identified as male or female settled crawlers usually small, hot pink scale with no deposits present
+
+final_cmbscfinal crapemyrtle bark scale counts. This column adds the counts from final_os, final_female, final_male, and final_nymph
+
+final_cmbsdfinal crapmyrtle bark scale density. This column divides column "final_cmbsc" by "length" expressed as individuals/cm
+
+initial_osthe number of crapemyrtle bark scale ovisacs counted at the beginning of the study; settled scales having the characteristic enlarged, raise, and white covering were included in these counts
+
+initial_femalethe number of crapemyrtle bark scale females counted at the beginning of the study; settled scales having the characteristic large, gray and/or beginning stages of white covering were included in these counts
+
+initial_malethe number of crapemyrtle bark scale males counted at the beginning of the study; settled scales with the indicative oval like, white cocoon were included in these counts
+
+initial_nymphthe number of crapemyrtle bark scale settled cralwers counted at the beginning of the study; these were settled crawlers that were too early in development to be identified as male or female settled crawlers usually small, hot pink scale with no deposits present
+
+initial_cmbscinitial crapemyrtle bark scale counts. This column adds the counts from initial_os, initial_female, initial_male, and initial_nymph
+
+initial_cmbsdinitial crapmyrtle bark scale density. This column divides column "initial_cmbsc" by "length" expressed as individuals/cm
+
+ant_ratingthe density of ants on the specific plants given as a rating from 0-4 (0- no ants observed; 1- ants observed in pot media only; 2- few ants observed moving up and down the stem of the plant; 3- many ants observed moving up and down the stem of the plant; 4- many ants observed moving up and down the stem of the plant AND mounding at the base was observed)
+
+abc_retentionthe number of released predators recovered at the end of the study
+
+notesspace to record observation/additional information not included in other columns
