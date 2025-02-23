@@ -16,7 +16,6 @@ all_data$R_check<-log( (all_data$final_cmbsd+1)/(all_data$initial_cmbsd+1) )
 summary(all_data$R_check)
 
 
-
 #create new data frame to reorder treatments
 new.map1<-all_data
 new.map1$treatment<-as.factor(new.map1$treatment)
@@ -55,6 +54,7 @@ Anova(Fit1, type='II')
 
 
 #Post-hoc
+library(emmeans)
 em_fit1<-emmeans(Fit1, pairwise~treatment)
 em_fit1
 
