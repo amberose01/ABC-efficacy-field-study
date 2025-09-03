@@ -582,3 +582,456 @@ figure <- ggarrange(ret_year1, ret_year2,
                     labels = c("A", "B"),
                     ncol = 2, nrow = 1)
 figure
+
+
+####Raw Count Analysis ####
+
+library(readr)
+library(ggplot2)
+
+#timepoint 2023
+
+year1_density_tp <- read_csv("year1_density_tp.csv")
+year1_density_tp$timepoint <- factor(year1_density_tp$timepoint, c("initial","final"))
+
+year1_density_tp$treatment<-as.factor(year1_density_tp$treatment)
+year1_density_tp$treatment <- factor(year1_density_tp$treatment, c('clean','untreated','untreated_netted','lw','lw_netted','sdb','sdb_netted','both','both_netted'))
+
+
+ggplot(year1_density_tp, aes(x=treatment, y=count, fill=timepoint)) + 
+  xlab("Treatment")+
+  ylab("A. lagerstroemiae count")+
+  geom_boxplot()+
+  theme_bw()+
+  scale_fill_manual(labels=c("Initial","Final"), values=c("gray","indianred2"))+
+  labs(fill="Timepoint")+
+  scale_x_discrete(labels=c('Clean', 'No predator, Unnetted', 'No predator, Netted', 'C.r., Unnetted','C.r., Netted','R.l., Unnetted', 'R.l., Netted','C.r./R.l., Unnetted','C.r./R.l., Netted'))+
+  theme(axis.text.x = element_text(angle = 40, vjust = 0.5, hjust=0.5), axis.title=element_text(size=15),axis.text=element_text(size=10))
+
+#final count 2023
+
+new.map1<-all_data
+new.map1$treatment<-as.factor(new.map1$treatment)
+new.map1$ant_rating<-as.factor(new.map1$ant_rating)
+new.map1$treatment <- factor(new.map1$treatment, c('clean','untreated','untreated_netted','lw','lw_netted','sdb','sdb_netted','both','both_netted'))
+new.map1$treatment1 <-as.factor(new.map1$treatment1)
+new.map1$treatment1<-factor(new.map1$treatment1, c('clean', 'untreated','lw','sdb','both'))  
+new.map1$netting<-factor(new.map1$netting, c('unnetted','netted'))
+
+
+raw1<-ggplot(new.map1, mapping=aes(x=treatment1, y=final_cmbsc, fill=netting))+
+  geom_boxplot()+
+  scale_fill_manual(labels=c("Unnetted","Netted"), values=c("gray","indianred2"))+
+  xlab("Treatment")+
+  ylab("Final counts")+
+  labs(fill="Netting")+
+  scale_x_discrete(labels=c('Clean', 'No predator', 'C.r.','R.l.','C.r./R.l.'))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 40, vjust = 0.5, hjust=0.5), axis.title=element_text(size=15),axis.text=element_text(size=10))
+raw1
+
+#emmeans counts 2023
+
+fit2<-lm(log(final_cmbsc +1)~treatment + log(initial_cmbsc+1) + ant_rating, data=new.map1)
+library(car)
+Anova(fit2)
+library(emmeans)
+
+em_fit2<-emmeans(fit2, pairwise~treatment)
+emmeans(fit2, pairwise~ant_rating)
+em_fit2
+
+#Convert emmeans output to df
+df_counts_year1<-as.data.frame(em_fit2$emmeans)
+
+#reorder treatments
+df_counts_year1$treatment<-as.factor(df_counts_year1$treatment)
+df_counts_year1$treatment <-c('clean','untreated','untreated','lw','lw','sdb','sdb','both','both')
+df_counts_year1$netting<-c('unnetted','unnetted','netted','unnetted','netted','unnetted','netted','unnetted','netted')
+df_counts_year1$treatment <- factor(df_counts_year1$treatment, c('clean','untreated','lw','sdb','both'))
+df_counts_year1$netting<-factor(df_counts_year1$netting, c('unnetted','netted'))
+
+# Define variance
+min<-df_counts_year1$lower.CL
+low<-df_counts_year1$emmean-df_counts_year1$SE
+mid<-df_counts_year1$emmean
+top<-df_counts_year1$emmean+df_counts_year1$SE
+max<-df_counts_year1$upper.CL
+
+
+
+emmeans1<-ggplot(df_counts_year1, aes(x=treatment, y=emmean, color=netting))+
+  geom_point(size=3, position=position_dodge(width=0.9),aes(color=netting))+
+  scale_color_manual(labels=c("Unnetted","Netted"), values=c("gray","indianred2"))+
+  geom_errorbar(aes(ymin=min, ymax=max, color=NULL, group=netting), position=position_dodge(width=0.9), size=1, linewidth=0.5)+
+  xlab("Treatment")+
+  ylab("EMM of final counts")+
+  theme_bw()+
+  labs(color="Netting")+
+  scale_x_discrete(labels=c('Clean', 'No predator','C.r.','R.l.', 'C.r./R.l.'))+
+  theme(plot.title.position = 'plot', plot.title = element_text(hjust = 0.5, size=13))+
+  theme(axis.text.x = element_text(angle = 40, vjust = 0.5, hjust=0.5),axis.title=element_text(size=15),axis.text=element_text(size=10))+
+  annotate("text", x=1, y=5.05, label= "a")+
+  annotate("text", x=1.78, y=7.13, label= "bc")+
+  annotate("text", x=2.22, y=7.25, label= "b")+
+  annotate("text", x=2.78, y=7.17, label= "b")+
+  annotate("text", x=3.22, y=7.62, label= "b")+
+  annotate("text", x=3.78, y=6.3, label= "ab")+
+  annotate("text", x=4.22, y=5.72, label= "acd")+
+  annotate("text", x=4.78, y=6.89, label= "bd")+
+  annotate("text", x=5.22, y=7.45, label= "b")
+emmeans1  
+
+library(ggpubr)
+year1 <- ggarrange(raw1, emmeans1,
+                   labels = c("A", "B"),
+                   ncol = 2, nrow = 1)
+year1
+
+
+###counts ant tending 2023
+
+em.ant1<-emmeans(fit2, pairwise~ant_rating)
+em.ant1
+
+df.ant1<-as.data.frame(em.ant1$emmeans)
+
+# Define variance
+low<-df.ant1$emmean-df.ant1$SE
+min<-df.ant1$lower.CL
+mid<-df.ant1$emmean
+max<-df.ant1$upper.CL
+top<-df.ant1$emmean+df.ant1$SE
+
+df.ant1$ant_rating<-as.factor(df.ant1$ant_rating)
+
+
+#above plot accounts for SE as boxplots, remove boxes
+em_ant_graph1<-ggplot(df.ant1, aes(x=ant_rating, y=emmean))+
+  geom_point(shape= 21, fill="indianred2", size=4, color="black")+
+  geom_errorbar(aes(ymin=min, ymax=max))+
+  xlab("Ant Rating")+
+  ylab("EMM of Final Counts")+
+  theme_bw()+
+  theme(plot.title.position = 'plot', plot.title = element_text(hjust = 0.5, size=13), axis.title=element_text(size=15), axis.text=element_text(size=12))+
+  annotate("text", x=1, y=5.6, label= "a", size=5)+
+  annotate("text", x=2, y=6.16, label= "ab", size=5)+
+  annotate("text", x=3, y=6.71, label= "bc", size=5)+
+  annotate("text", x=4, y=7.19, label= "c", size=5)+
+  annotate("text", x=5, y=7.6, label= "abc", size=5)
+em_ant_graph1
+
+
+###count timepoint 2024
+
+library(readr)
+library(ggplot2)
+
+year2_density_tp <- read_csv("year2_density_tp.csv")
+year2_density_tp$timepoint <- factor(year2_density_tp$timepoint, c("initial","final"))
+
+year2_density_tp$treatment<-as.factor(year2_density_tp$treatment)
+year2_density_tp$treatment <- factor(year2_density_tp$treatment, c('clean','untreated','untreated_netted','lw_10','lw_netted_10','lw_20','lw_netted_20','lw_30','lw_netted_30','sdb','sdb_netted'))
+
+ggplot(year2_density_tp, aes(x=treatment, y=count, fill=timepoint)) + 
+  scale_fill_manual(labels=c("Initial","Final"), values=c("gray","indianred2"))+
+  labs(fill="Timepoint")+
+  xlab("Treatment")+
+  ylab("A. lagerstroemiae counts")+
+  geom_boxplot()+
+  theme_bw()+
+  scale_x_discrete(labels=c('Clean', 'No predator, Unnetted', 'No predator, Netted', 'C.r., Unnetted','C.r., Netted','R.l., Unnetted', 'R.l., Netted','C.r./R.l., Unnetted','C.r./R.l., Netted'))+
+  theme(axis.text.x = element_text(angle = 40, vjust = 0.5, hjust=0.5), axis.title=element_text(size=15),axis.text=element_text(size=10))
+
+##final counts 2024
+
+all_data_2024 <- read_csv("all_data_2024.csv")
+
+new.map2<-all_data_2024
+new.map2$treatment<-as.factor(new.map2$treatment)
+new.map2$final_antrating<-as.factor(new.map2$final_antrating)
+new.map2$treatment <- factor(new.map2$treatment, c('clean','untreated','untreated_netted','lw_10','lw_netted_10','lw_20','lw_netted_20','lw_30','lw_netted_30','sdb','sdb_netted'))
+
+new.map2$treatment1<-as.factor(new.map2$treatment1)
+new.map2$treatment1<-factor(new.map2$treatment1, c('clean','untreated','lw_10','lw_20','lw_30','sdb'))
+new.map2$netting<-as.factor(new.map2$netting)
+new.map2$netting<-factor(new.map2$netting, c('unnetted','netted'))
+
+raw2<-ggplot(new.map2, mapping=aes(x=treatment1, y=final_cmbs, fill=netting))+
+  geom_boxplot()+
+  scale_fill_manual(labels=c("Unnetted", "Netted"),values=c("lightgray","indianred2"))+
+  xlab("Treatment")+
+  ylab("Final counts")+
+  labs(fill="Netting")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 40, vjust = 0.5, hjust=0.5), axis.title=element_text(size=15),axis.text=element_text(size=10))+
+  scale_x_discrete(labels=c('Clean', 'No predator', 'C.r. x 10','C.r. x 20','C.r. x 30', 'R.l.'))
+raw2
+
+### emmeans 2024
+
+fit3<-lm(log(final_cmbs +1)~treatment + log(initial_cmbs+1) + final_antrating, data=new.map2)
+library(car)
+Anova(fit3)
+library(emmeans)
+em_counts_24<-emmeans(fit3, pairwise~treatment)
+em_counts_24
+
+df_counts_year2<-as.data.frame(em_counts_24$emmeans)
+
+df_counts_year2$treatment<-as.factor(df_counts_year2$treatment)
+df_counts_year2$treatment <-c('clean','untreated','untreated','lw_10','lw_10','lw_20','lw_20','lw_30','lw_30','sdb','sdb')
+df_counts_year2$netting<-c('unnetted','unnetted','netted','unnetted','netted','unnetted','netted','unnetted','netted','unnetted','netted')
+df_counts_year2$treatment <- factor(df_counts_year2$treatment, c('clean','untreated','lw_10','lw_20','lw_30','sdb'))
+df_counts_year2$netting<-factor(df_counts_year2$netting, c('unnetted','netted'))
+
+low<-df_counts_year2$emmean-df_counts_year2$SE
+min<-df_counts_year2$lower.CL
+mid<-df_counts_year2$emmean
+max<-df_counts_year2$upper.CL
+top<-df_counts_year2$emmean+df_counts_year2$SE
+
+
+emmeans2<-ggplot(df_counts_year2, aes(x=treatment, y=emmean, color=netting))+
+  geom_point(size=3, position=position_dodge(width=0.9), aes(color=netting))+
+  scale_color_manual(labels=c("Unnetted","Netted"), values=c("lightgray","indianred2"))+
+  geom_errorbar(aes(ymin=min, ymax=max, color=NULL, group=netting), position=position_dodge(width=0.9), size=1, linewidth=0.5)+
+  xlab("Treatment")+
+  ylab("EMM of final counts")+
+  labs(color="Netting")+
+  theme_bw()+
+  scale_x_discrete(labels=c('Clean', 'No predator','C.r. x 10','C.r. X 20', 'C.r. X 30', 'R.l.'))+
+  theme(plot.title.position = 'plot', plot.title = element_text(hjust = 0.5, size=13))+
+  theme(axis.text.x = element_text(angle = 40, vjust = 0.5, hjust=0.5),axis.title=element_text(size=15),axis.text=element_text(size=10))+
+  annotate("text", x=1, y=7.15, label= "ab")+
+  annotate("text", x=1.78, y=8.04, label= "a")+
+  annotate("text", x=2.23, y=8.35, label= "a")+
+  annotate("text", x=2.78, y=8.33, label= "a")+
+  annotate("text", x=3.23, y=7.56, label= "a")+
+  annotate("text", x=3.78, y=7.49, label= "a")+
+  annotate("text", x=4.23, y=6.86, label= "ab")+
+  annotate("text", x=4.78, y=7.69, label= "a")+
+  annotate("text", x=5.23, y=6.88, label= "a")+
+  annotate("text", x=5.78, y=7.82, label= "a")+
+  annotate("text", x=6.23, y=4.77, label= "b")
+emmeans2  
+
+library(ggpubr)
+year2 <- ggarrange(raw2, emmeans2,
+                   labels = c("A", "B"),
+                   ncol = 2, nrow = 1)
+year2
+
+#ant tending 2024
+
+library(emmeans)
+em.ant2<-emmeans(fit3, pairwise~final_antrating)
+em.ant2
+
+#graph emmeans ant rating for year 1
+
+df.ant2<-as.data.frame(em.ant2$emmeans)
+
+# Define variance
+low<-df.ant2$emmean-df.ant2$SE
+min<-df.ant2$lower.CL
+mid<-df.ant2$emmean
+max<-df.ant2$upper.CL
+top<-df.ant2$emmean+df.ant1$SE
+
+df.ant2$final_antrating<-as.factor(df.ant2$final_antrating)
+
+
+#above plot accounts for SE as boxplots, remove boxes
+em_ant_graph2<-ggplot(df.ant2, aes(x=final_antrating, y=emmean))+
+  geom_point(shape= 21, fill="indianred2", size=4, color="black")+
+  geom_errorbar(aes(ymin=min, ymax=max))+
+  xlab("Ant Rating")+
+  ylab("EMM of Final Counts")+
+  theme_bw()+
+  theme(plot.title.position = 'plot', plot.title = element_text(hjust = 0.5, size=13), axis.title=element_text(size=15), axis.text=element_text(size=12))+
+  annotate("text", x=1, y=6.13, label= "a", size=5)+
+  annotate("text", x=2, y=6.62, label= "ab", size=5)+
+  annotate("text", x=3, y=7.23, label= "bc", size=5)+
+  annotate("text", x=4, y=8.08, label= "c", size=5)+
+  annotate("text", x=5, y=7.84, label= "abc", size=5)
+em_ant_graph2
+
+
+#### Environmental Conditions ####
+
+##Oak Arch data
+library(readr)
+oak_temp_2023 <- read_csv("oak_temp_2023.csv")
+
+temp_clean23<-na.omit(oak_temp_2023)
+temp_clean23$temp_c<-as.numeric(temp_clean23$temp_c)
+
+library(lubridate)
+temp_clean23$new_date<-mdy_hm(temp_clean23$date)
+
+temp_clean23$new_date<-as.POSIXct(temp_clean23$new_date, format="%Y-%d-%d %H:%M")
+
+library(ggplot2)
+ggplot(data=temp_clean23, mapping=aes(x=new_date, y=temp_c))+
+  geom_smooth()+
+  theme_classic()
+
+year1_temp<-ggplot(data=temp_clean23, mapping=aes(x=new_date))+
+  geom_smooth(aes(y=temp_c, color="line 1"))+
+  geom_smooth(aes(y=heat_c, color="line 2"), linetype="dashed")+
+  theme_classic()+
+  ylab("Temperature (°C)")+
+  xlab("Time")+
+  scale_color_manual(values=c("line 1"="orange", "line 2"="black"), labels=c("line 1"="Measured temperature", "line 2"="Heat index"))+
+  theme(legend.title=element_blank(), legend.position=c(0.2,0.1))
+year1_temp
+
+year1_hum<-ggplot(data=temp_clean23, mapping=aes(x=new_date, y=hum))+
+  geom_smooth(color="#8DBBDC")+
+  theme_classic()+
+  ylab("Relative humidity (%)")+
+  xlab("Time")
+year1_hum
+
+library(ggpubr)
+year1_env <- ggarrange(year1_temp, year1_hum,
+                       labels = c("A", "B"),
+                       ncol = 2, nrow = 1)
+year1_env
+
+library(plotrix)
+library(dplyr)
+temp_clean23 %>% 
+  summarize(mean_temp_c = mean(temp_c), na.rm=FALSE, std.error(temp_c))
+
+temp_clean23 %>% 
+  summarize(mean_heat_c = mean(heat_c), na.rm=FALSE, std.error(heat_c))
+
+temp_clean23 %>% 
+  summarize(mean_hum = mean(hum), na.rm=FALSE, std.error(hum))
+
+
+
+library(readr)
+oak_temp_2024 <- read_csv("oak_temp_2024.csv")
+
+temp_clean24<-na.omit(oak_temp_2024)
+temp_clean24$temp_c<-as.numeric(temp_clean24$temp_c)
+
+library(lubridate)
+temp_clean24$new_date<-mdy_hm(temp_clean24$date)
+
+temp_clean24$new_date<-as.POSIXct(temp_clean24$new_date, format="%Y-%d-%d %H:%M")
+
+library(ggplot2)
+ggplot(data=temp_clean24, mapping=aes(x=new_date, y=temp_c))+
+  geom_smooth()+
+  theme_classic()
+
+year2_temp<-ggplot(data=temp_clean24, mapping=aes(x=new_date))+
+  geom_smooth(aes(y=temp_c, color="line 1"))+
+  geom_smooth(aes(y=heat_c, color="line 2"), linetype="dashed")+
+  theme_classic()+
+  ylab("Temperature (°C)")+
+  xlab("Time")+
+  scale_color_manual(values=c("line 1"="orange", "line 2"="black"), labels=c("line 1"="Measured temperature", "line 2"="Heat index"))+
+  theme(legend.title=element_blank(), legend.position=c(0.3,0.1))
+year2_temp
+
+year2_hum<-ggplot(data=temp_clean24, mapping=aes(x=new_date, y=hum))+
+  geom_smooth(color="#8DBBDC")+
+  theme_classic()+
+  ylab("Relative humidity (%)")+
+  xlab("Time")
+year2_hum
+
+library(ggpubr)
+year2_env <- ggarrange(year2_temp, year2_hum,
+                       labels = c("A", "B"),
+                       ncol = 2, nrow = 1)
+year2_env
+
+
+library(plotrix)
+library(dplyr)
+temp_clean24 %>% 
+  summarize(mean_temp_c = mean(temp_c), na.rm=FALSE, std.error(temp_c))
+
+temp_clean24 %>% 
+  summarize(mean_heat_c = mean(heat_c), na.rm=FALSE, std.error(heat_c))
+
+temp_clean24 %>% 
+  summarize(mean_hum = mean(hum), na.rm=FALSE, std.error(hum))
+
+
+#### Predator release ratio ####
+
+#2023
+library(readr)
+all_data <- read_csv("all_data.csv")
+
+##SDB
+library(dplyr)
+subset_2023<-as.data.frame(all_data)
+sdb <- subset_2023 %>% filter(treatment %in% c("sdb", "sdb_netted"))
+
+min(sdb$initial_cmbsc)
+max(sdb$initial_cmbsc)
+mean(sdb$initial_cmbsc)
+
+##LW
+library(dplyr)
+
+lw <- subset_2023 %>% filter(treatment %in% c("lw", "lw_netted"))
+
+min(lw$initial_cmbsc)
+max(lw$initial_cmbsc)
+mean(lw$initial_cmbsc)
+
+##both
+library(dplyr)
+
+both <- subset_2023 %>% filter(treatment %in% c("both", "both_netted"))
+
+min(both$initial_cmbsc)
+max(both$initial_cmbsc)
+mean(both$initial_cmbsc)
+
+##2024
+library(readr)
+all_data_2024 <- read_csv("all_data_2024.csv")
+
+library(dplyr)
+subset_2024<-as.data.frame(all_data_2024)
+
+##SDB
+
+sdb1 <- subset_2024 %>% filter(treatment %in% c("sdb", "sdb_netted"))
+
+min(sdb1$initial_cmbs)
+max(sdb1$initial_cmbs)
+mean(sdb1$initial_cmbs)
+
+##LW
+library(dplyr)
+
+lw_10 <- subset_2024 %>% filter(treatment %in% c("lw_10", "lw_netted_10"))
+
+min(lw_10$initial_cmbs)
+max(lw_10$initial_cmbs)
+mean(lw_10$initial_cmbs)
+
+lw_20 <- subset_2024 %>% filter(treatment %in% c("lw_20", "lw_netted_20"))
+
+min(lw_20$initial_cmbs)
+max(lw_20$initial_cmbs)
+mean(lw_20$initial_cmbs)
+
+lw_30 <- subset_2024 %>% filter(treatment %in% c("lw_30", "lw_netted_30"))
+
+min(lw_30$initial_cmbs)
+max(lw_30$initial_cmbs)
+mean(lw_30$initial_cmbs)
+
+
